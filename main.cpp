@@ -11,14 +11,19 @@ void echo() {
             std::ostream_iterator<char>(std::cout, " "));
 }
 
-void InitGlog(char* argv[]) {
-  google::InitGoogleLogging(argv[0]);
-  FLAGS_log_dir = "./log";
+void CreateLogDir() {
   try {
     std::filesystem::create_directory(FLAGS_log_dir);
   } catch (const std::exception& e) {
     LOG(ERROR) << "mkdir log directory error: " << e.what() << '\n';
   }
+}
+
+void InitGlog(char* argv[]) {
+  google::InitGoogleLogging(argv[0]);
+  FLAGS_log_dir = "./log";
+  CreateLogDir();
+  google::EnableLogCleaner(3);
 }
 
 void SayHello() {
