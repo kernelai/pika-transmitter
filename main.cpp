@@ -1,3 +1,6 @@
+#include <glog/logging.h>
+
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 
@@ -7,7 +10,11 @@ void echo() {
             std::ostream_iterator<char>(std::cout, " "));
 }
 
-int main() {
-  std::cout << "Hello, World!" << std::endl;
+void InitGlog(char* argv[]) { google::InitGoogleLogging(argv[0]); }
+
+void SayHello() { LOG(INFO) << "Glog say: Hello, World!"; }
+
+int main(int argc, char* argv[]) {
+  SayHello();
   echo();
 }

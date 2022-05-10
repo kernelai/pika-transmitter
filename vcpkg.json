@@ -1,0 +1,10 @@
+{
+    "name": "pika-transmiter",
+    "version-string": "0.0.1",
+    "maintainers": "kernelai",
+    "license": "bsd-3-clause",
+    "description": "Pika Transmiter between two pika server",
+    "dependencies": [
+        "glog"
+    ] 
+}
