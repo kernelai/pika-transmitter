@@ -3,15 +3,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/third/vcpkg/scripts/buildsystems/vcpkg.cmake
   CACHE STRING "Vcpkg toolchain file")
 
+set(Boost_NO_WARN_NEW_VERSIONS 1)
+
 project(pika-transmister VERSION 0.1.0)
 
 include(CTest)
 enable_testing()
 
-find_package (glog 0.5.0 REQUIRED)
-
-add_executable(pika-transmister main.cpp)
-target_link_libraries (pika-transmister glog::glog)
+# find_package (glog CONFIG REQUIRED)
+find_package(folly CONFIG REQUIRED)
+add_executable(pika-transmiter main.cpp)
+target_link_libraries(pika-transmiter  Folly::folly)
+# target_link_libraries (pika-transmister glog::glog)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

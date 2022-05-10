@@ -5,6 +5,7 @@
     "license": "bsd-3-clause",
     "description": "Pika Transmiter between two pika server",
     "dependencies": [
-        "glog"
+        "glog",
+        "folly"
     ] 
 }
