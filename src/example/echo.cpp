@@ -31,8 +31,8 @@ void SayHello() {
   LOG(WARNING) << "Glog say: Hello, World!";
 }
 
-// int main(int argc, char* argv[]) {
-//   InitGlog(argv);
-//   SayHello();
-//   echo();
-// }
+int main(int argc, char* argv[]) {
+  InitGlog(argv);
+  SayHello();
+  echo();
+}

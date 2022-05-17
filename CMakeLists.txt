@@ -11,9 +11,9 @@ include(CTest)
 enable_testing()
 
 find_package(wangle REQUIRED)
-add_executable(EchoClient EchoClient.cpp)
+add_executable(EchoClient src/example/EchoClient.cpp)
 target_link_libraries(EchoClient PRIVATE wangle::wangle)
-add_executable(EchoServer EchoServer.cpp)
+add_executable(EchoServer src/example/EchoServer.cpp)
 target_link_libraries(EchoServer PRIVATE wangle::wangle)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
