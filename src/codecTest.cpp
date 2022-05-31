@@ -1,5 +1,4 @@
 #include <folly/portability/GTest.h>
-#include <wangle/codec/test/CodecTestUtils.h>
 
 #include "redis_decoder.h"
 
@@ -16,6 +15,24 @@ auto createZeroedBuffer(size_t size) {
 }
 } // namespace
 
+class FrameTester
+    : public wangle::InboundHandler<RedisReplyPtr> {
+ public:
+  explicit FrameTester(
+      folly::Function<void(RedisReplyPtr)> test)
+      : test_(std::move(test)) {}
+
+  void read(Context*, RedisReplyPtr buf) override {
+    test_(std::move(buf));
+  }
+
+  void readException(Context*, folly::exception_wrapper) override {
+    test_(nullptr);
+  }
+
+ private:
+  folly::Function<void(RedisReplyPtr)> test_;
+};
 
 TEST(ByteToRespDecoder, Simple) {
   auto pipeline = Pipeline<IOBufQueue&, std::unique_ptr<IOBuf>>::create();
@@ -23,10 +40,8 @@ TEST(ByteToRespDecoder, Simple) {
 
   (*pipeline)
       .addBack(ByteToRespDecoder())
-      .addBack(test::FrameTester([&](std::unique_ptr<IOBuf> buf) {
-        auto sz = buf->computeChainDataLength();
+      .addBack(FrameTester([&](RedisReplyPtr reply) {
         called++;
-        EXPECT_EQ(sz, 3);
       }))
       .finalize();
 
@@ -37,6 +52,7 @@ TEST(ByteToRespDecoder, Simple) {
   q.append(std::move(buf));
   pipeline->read(q);
   EXPECT_EQ(called, 0);
+  
 
 //   buf = createZeroedBuffer(1);
 //   RWPrivateCursor c(buf.get());

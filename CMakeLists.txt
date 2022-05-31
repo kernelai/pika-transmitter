@@ -22,7 +22,7 @@ target_link_libraries(EchoServer PRIVATE wangle::wangle)
 
 
 find_package(GTest CONFIG REQUIRED)
-add_executable(byteToRespDecoderTest src/redis_decoder.h)
+add_executable(byteToRespDecoderTest src/redis_decoder.h src/codecTest.cpp)
 target_link_libraries(byteToRespDecoderTest PRIVATE hiredis::hiredis wangle::wangle GTest::gmock_main)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
