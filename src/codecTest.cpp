@@ -13,25 +13,21 @@ auto createZeroedBuffer(size_t size) {
   std::memset(ret->writableData(), 0x00, size);
   return ret;
 }
-} // namespace
+}  // namespace
 
-class FrameTester
-    : public wangle::InboundHandler<RedisReplyPtr> {
+class FrameTester : public wangle::InboundHandler<ReplyCollection> {
  public:
-  explicit FrameTester(
-      folly::Function<void(RedisReplyPtr)> test)
+  explicit FrameTester(folly::Function<void(ReplyCollection)> test)
       : test_(std::move(test)) {}
 
-  void read(Context*, RedisReplyPtr buf) override {
-    test_(std::move(buf));
-  }
+  void read(Context*, ReplyCollection buf) override { test_(std::move(buf)); }
 
-  void readException(Context*, folly::exception_wrapper) override {
-    test_(nullptr);
+  void readException(Context*, folly::exception_wrapper e) override {
+    LOG(ERROR) << "readException" << e.what();
   }
 
  private:
-  folly::Function<void(RedisReplyPtr)> test_;
+  folly::Function<void(ReplyCollection)> test_;
 };
 
 TEST(ByteToRespDecoder, Simple) {
@@ -40,42 +36,45 @@ TEST(ByteToRespDecoder, Simple) {
 
   (*pipeline)
       .addBack(ByteToRespDecoder())
-      .addBack(FrameTester([&](RedisReplyPtr reply) {
-        called++;
-      }))
+      .addBack(FrameTester([&](ReplyCollection collect) { called++;
+                              EXPECT_EQ(2, collect->size());
+                              // EXPECT_EQ(1, reply->at(0)->reply()->integer);
+                              for_each(collect->begin(), collect->end(),
+                                       [](auto& reply) {
+                                         EXPECT_EQ(REDIS_REPLY_STATUS, reply->reply()->type);
+                                       });
+                            })) 
       .finalize();
 
-  auto buf = createZeroedBuffer(3);
-
   IOBufQueue q(IOBufQueue::cacheChainLength());
-
-  q.append(std::move(buf));
+  q.append(IOBuf::copyBuffer("+OK\r\n"));
+  q.append(IOBuf::copyBuffer("+OK\r\n"));
   pipeline->read(q);
-  EXPECT_EQ(called, 0);
-  
+  pipeline->read(q);
+  EXPECT_EQ(called, 1);
 
-//   buf = createZeroedBuffer(1);
-//   RWPrivateCursor c(buf.get());
-//   c.write<char>('\n');
-//   q.append(std::move(buf));
-//   pipeline->read(q);
-//   EXPECT_EQ(called, 1);
+  //   buf = createZeroedBuffer(1);
+  //   RWPrivateCursor c(buf.get());
+  //   c.write<char>('\n');
+  //   q.append(std::move(buf));
+  //   pipeline->read(q);
+  //   EXPECT_EQ(called, 1);
 
-//   buf = createZeroedBuffer(4);
-//   RWPrivateCursor c1(buf.get());
-//   c1.write(' ');
-//   c1.write(' ');
-//   c1.write(' ');
+  //   buf = createZeroedBuffer(4);
+  //   RWPrivateCursor c1(buf.get());
+  //   c1.write(' ');
+  //   c1.write(' ');
+  //   c1.write(' ');
 
-//   c1.write('\r');
-//   q.append(std::move(buf));
-//   pipeline->read(q);
-//   EXPECT_EQ(called, 1);
+  //   c1.write('\r');
+  //   q.append(std::move(buf));
+  //   pipeline->read(q);
+  //   EXPECT_EQ(called, 1);
 
-//   buf = createZeroedBuffer(1);
-//   RWPrivateCursor c2(buf.get());
-//   c2.write('\n');
-//   q.append(std::move(buf));
-//   pipeline->read(q);
-//   EXPECT_EQ(called, 2);
+  //   buf = createZeroedBuffer(1);
+  //   RWPrivateCursor c2(buf.get());
+  //   c2.write('\n');
+  //   q.append(std::move(buf));
+  //   pipeline->read(q);
+  //   EXPECT_EQ(called, 2);
 }

@@ -4,6 +4,7 @@
 #include <wangle/codec/ByteToMessageDecoder.h>
 #include <wangle/codec/MessageToByteEncoder.h>
 
+#include <algorithm>
 #include <string>
 using namespace wangle;
 using namespace folly;
@@ -23,31 +24,41 @@ class RedisReply {
 };
 
 using RedisReplyPtr = std::unique_ptr<RedisReply>;
+using ReplyCollection = std::unique_ptr<std::vector<RedisReplyPtr>>;
 
-class ByteToRespDecoder : public ByteToMessageDecoder<RedisReplyPtr> {
+class ByteToRespDecoder : public ByteToMessageDecoder<ReplyCollection> {
  public:
   ByteToRespDecoder() : reader_(redisReaderCreate(), redisReaderFree) {}
 
-  bool decode(Context* ctx, IOBufQueue& buf, RedisReplyPtr& result,
+  bool decode(Context* ctx, IOBufQueue& buf, ReplyCollection& result,
               size_t&) override {
     if (buf.chainLength() == 0) {
       return false;
     }
     auto data = buf.move();
+    data->coalesce();
     if (redisReaderFeed(reader_.get(), (const char*)data->data(),
                         data->length()) != REDIS_OK) {
       fail(ctx, std::string(reader_->errstr));
       return false;
     }
-    redisReply* reply = nullptr;
-    if (redisReaderGetReply(reader_.get(), (void**)&reply) != REDIS_OK) {
-      fail(ctx, reader_->errstr);
+
+    auto collect = std::make_unique<std::vector<RedisReplyPtr>>();
+    while (true) {
+      redisReply* reply = nullptr;
+      if (redisReaderGetReply(reader_.get(), (void**)&reply) != REDIS_OK) {
+        fail(ctx, reader_->errstr);
+        return false;
+      }
+      if (reply == nullptr) {
+        break;
+      }
+      collect->push_back(std::make_unique<RedisReply>(reply));
+    }
+    if (collect->size() == 0) {
       return false;
     }
-    if (reply == nullptr) {
-      return false;
-    }
-    result = std::make_unique<RedisReply>(reply);
+    result = std::move(collect);
     return true;
   }
 
