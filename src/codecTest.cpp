@@ -38,7 +38,6 @@ TEST(ByteToRespDecoder, Simple) {
       .addBack(ByteToRespDecoder())
       .addBack(FrameTester([&](ReplyCollection collect) { called++;
                               EXPECT_EQ(2, collect->size());
-                              // EXPECT_EQ(1, reply->at(0)->reply()->integer);
                               for_each(collect->begin(), collect->end(),
                                        [](auto& reply) {
                                          EXPECT_EQ(REDIS_REPLY_STATUS, reply->reply()->type);
@@ -52,29 +51,4 @@ TEST(ByteToRespDecoder, Simple) {
   pipeline->read(q);
   pipeline->read(q);
   EXPECT_EQ(called, 1);
-
-  //   buf = createZeroedBuffer(1);
-  //   RWPrivateCursor c(buf.get());
-  //   c.write<char>('\n');
-  //   q.append(std::move(buf));
-  //   pipeline->read(q);
-  //   EXPECT_EQ(called, 1);
-
-  //   buf = createZeroedBuffer(4);
-  //   RWPrivateCursor c1(buf.get());
-  //   c1.write(' ');
-  //   c1.write(' ');
-  //   c1.write(' ');
-
-  //   c1.write('\r');
-  //   q.append(std::move(buf));
-  //   pipeline->read(q);
-  //   EXPECT_EQ(called, 1);
-
-  //   buf = createZeroedBuffer(1);
-  //   RWPrivateCursor c2(buf.get());
-  //   c2.write('\n');
-  //   q.append(std::move(buf));
-  //   pipeline->read(q);
-  //   EXPECT_EQ(called, 2);
 }

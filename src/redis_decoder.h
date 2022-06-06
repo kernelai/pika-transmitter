@@ -36,12 +36,20 @@ class ByteToRespDecoder : public ByteToMessageDecoder<ReplyCollection> {
       return false;
     }
     auto data = buf.move();
-    data->coalesce();
-    if (redisReaderFeed(reader_.get(), (const char*)data->data(),
-                        data->length()) != REDIS_OK) {
-      fail(ctx, std::string(reader_->errstr));
-      return false;
+    for (auto i = data->begin(); i != data->end(); ++i) {
+      if (redisReaderFeed(reader_.get(),
+                          reinterpret_cast<const char*>(i->data()),
+                          i->size()) != REDIS_OK) {
+        fail(ctx, std::string(reader_->errstr));
+        return false;
+      }
     }
+
+    // if (redisReaderFeed(reader_.get(), (const char*)data->data(),
+    //                     data->length()) != REDIS_OK) {
+    //   fail(ctx, std::string(reader_->errstr));
+    //   return false;
+    // }
 
     auto collect = std::make_unique<std::vector<RedisReplyPtr>>();
     while (true) {

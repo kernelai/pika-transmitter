@@ -12,13 +12,21 @@ enable_testing()
 
 find_package(wangle REQUIRED)
 find_package(hiredis CONFIG REQUIRED)
+find_package(folly CONFIG REQUIRED)
+
+
 add_executable(EchoClient src/example/EchoClient.cpp)
 target_link_libraries(EchoClient PRIVATE wangle::wangle)
+
 add_executable(EchoServer
  src/redis_decoder.cpp
  src/redis_decoder.h
  src/example/EchoServer.cpp)
 target_link_libraries(EchoServer PRIVATE wangle::wangle)
+
+
+add_executable(iobufTest src/example/iobufTest.cpp)
+target_link_libraries(iobufTest PRIVATE Folly::folly)
 
 
 find_package(GTest CONFIG REQUIRED)
