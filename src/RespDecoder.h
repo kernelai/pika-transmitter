@@ -26,9 +26,9 @@ class RedisReply {
 using RedisReplyPtr = std::unique_ptr<RedisReply>;
 using ReplyCollection = std::unique_ptr<std::vector<RedisReplyPtr>>;
 
-class ByteToRespDecoder : public ByteToMessageDecoder<ReplyCollection> {
+class RespDecoder : public ByteToMessageDecoder<ReplyCollection> {
  public:
-  ByteToRespDecoder() : reader_(redisReaderCreate(), redisReaderFree) {}
+  RespDecoder() : reader_(redisReaderCreate(), redisReaderFree) {}
 
   bool decode(Context* ctx, IOBufQueue& buf, ReplyCollection& result,
               size_t&) override {
@@ -44,12 +44,6 @@ class ByteToRespDecoder : public ByteToMessageDecoder<ReplyCollection> {
         return false;
       }
     }
-
-    // if (redisReaderFeed(reader_.get(), (const char*)data->data(),
-    //                     data->length()) != REDIS_OK) {
-    //   fail(ctx, std::string(reader_->errstr));
-    //   return false;
-    // }
 
     auto collect = std::make_unique<std::vector<RedisReplyPtr>>();
     while (true) {

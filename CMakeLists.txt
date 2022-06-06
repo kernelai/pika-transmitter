@@ -19,8 +19,6 @@ add_executable(EchoClient src/example/EchoClient.cpp)
 target_link_libraries(EchoClient PRIVATE wangle::wangle)
 
 add_executable(EchoServer
- src/redis_decoder.cpp
- src/redis_decoder.h
  src/example/EchoServer.cpp)
 target_link_libraries(EchoServer PRIVATE wangle::wangle)
 
@@ -30,8 +28,8 @@ target_link_libraries(iobufTest PRIVATE Folly::folly)
 
 
 find_package(GTest CONFIG REQUIRED)
-add_executable(byteToRespDecoderTest src/redis_decoder.h src/codecTest.cpp)
-target_link_libraries(byteToRespDecoderTest PRIVATE hiredis::hiredis wangle::wangle GTest::gmock_main)
+add_executable(RespDecoderTest src/RespDecoder.h src/RespDecoderTest.cpp)
+target_link_libraries(RespDecoderTest PRIVATE hiredis::hiredis wangle::wangle GTest::gmock_main)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

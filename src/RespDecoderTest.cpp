@@ -1,19 +1,10 @@
 #include <folly/portability/GTest.h>
 
-#include "redis_decoder.h"
+#include "RespDecoder.h"
 
 using namespace folly;
 using namespace wangle;
 using namespace folly::io;
-
-namespace {
-auto createZeroedBuffer(size_t size) {
-  auto ret = IOBuf::create(size);
-  ret->append(size);
-  std::memset(ret->writableData(), 0x00, size);
-  return ret;
-}
-}  // namespace
 
 class FrameTester : public wangle::InboundHandler<ReplyCollection> {
  public:
@@ -30,12 +21,12 @@ class FrameTester : public wangle::InboundHandler<ReplyCollection> {
   folly::Function<void(ReplyCollection)> test_;
 };
 
-TEST(ByteToRespDecoder, Simple) {
+TEST(RespDecoder, Simple) {
   auto pipeline = Pipeline<IOBufQueue&, std::unique_ptr<IOBuf>>::create();
   int called = 0;
 
   (*pipeline)
-      .addBack(ByteToRespDecoder())
+      .addBack(RespDecoder())
       .addBack(FrameTester([&](ReplyCollection collect) { called++;
                               EXPECT_EQ(2, collect->size());
                               for_each(collect->begin(), collect->end(),
