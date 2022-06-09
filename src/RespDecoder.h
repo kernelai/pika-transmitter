@@ -4,33 +4,31 @@
 #include <wangle/codec/ByteToMessageDecoder.h>
 #include <wangle/codec/MessageToByteEncoder.h>
 
-#include <algorithm>
-#include <string>
 using namespace wangle;
 using namespace folly;
 
-class RedisReply {
+class Resp {
  public:
-  RedisReply(redisReply* reply) : reply_(reply) {}
-  ~RedisReply() {
+  Resp(redisReply* reply) : reply_(reply) {}
+  ~Resp() {
     if (reply_) {
       freeReplyObject(reply_);
     }
   }
-  redisReply* reply() { return reply_; }
+  redisReply* get() { return reply_; }
 
  private:
   redisReply* reply_;
 };
 
-using RedisReplyPtr = std::unique_ptr<RedisReply>;
-using ReplyCollection = std::unique_ptr<std::vector<RedisReplyPtr>>;
+using RespPtr = std::unique_ptr<Resp>;
+using RespCollection = std::vector<RespPtr>;
 
-class RespDecoder : public ByteToMessageDecoder<ReplyCollection> {
+class RespDecoder : public ByteToMessageDecoder<std::unique_ptr<RespCollection>> {
  public:
   RespDecoder() : reader_(redisReaderCreate(), redisReaderFree) {}
 
-  bool decode(Context* ctx, IOBufQueue& buf, ReplyCollection& result,
+  bool decode(Context* ctx, IOBufQueue& buf, std::unique_ptr<RespCollection>& result,
               size_t&) override {
     if (buf.chainLength() == 0) {
       return false;
@@ -45,7 +43,7 @@ class RespDecoder : public ByteToMessageDecoder<ReplyCollection> {
       }
     }
 
-    auto collect = std::make_unique<std::vector<RedisReplyPtr>>();
+    auto collect = std::make_unique<std::vector<RespPtr>>();
     while (true) {
       redisReply* reply = nullptr;
       if (redisReaderGetReply(reader_.get(), (void**)&reply) != REDIS_OK) {
@@ -55,7 +53,7 @@ class RespDecoder : public ByteToMessageDecoder<ReplyCollection> {
       if (reply == nullptr) {
         break;
       }
-      collect->push_back(std::make_unique<RedisReply>(reply));
+      collect->push_back(std::make_unique<Resp>(reply));
     }
     if (collect->size() == 0) {
       return false;
