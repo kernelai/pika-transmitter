@@ -30,8 +30,8 @@ target_link_libraries(iobufTest PRIVATE Folly::folly)
 # test for RespDecoder
 add_executable(RespDecoderTest src/RespDecoder.h src/RespDecoderTest.cpp)
 target_link_libraries(RespDecoderTest PRIVATE hiredis::hiredis wangle::wangle GTest::gmock_main)
-# test for OperationHandler
-add_executable(OperationHandlerTest src/OperationHandler.h src/OperationHandlerTest.cpp src/RespDecoder.h)
+# test for RequestHandler
+add_executable(OperationHandlerTest src/RequestHandler.h src/RequestHandlerTest.cpp src/RespDecoder.h)
 target_link_libraries(OperationHandlerTest PRIVATE hiredis::hiredis wangle::wangle GTest::gmock_main)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

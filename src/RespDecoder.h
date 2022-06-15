@@ -64,7 +64,7 @@ class RespDecoder : public ByteToMessageDecoder<std::unique_ptr<RespCollection>>
 
   void fail(Context* ctx, const std::string& msg) {
     ctx->fireReadException(folly::make_exception_wrapper<std::runtime_error>(
-        "redis resp decoder error:" + msg));
+        "redis resp decoder error: " + msg));
   }
 
  private:
